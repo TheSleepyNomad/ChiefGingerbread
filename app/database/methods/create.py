@@ -1,7 +1,7 @@
 from sqlalchemy.exc import NoResultFound
 
-from database.main import Database
-from database.models import Users
+from app.database.main import Database
+from app.database.models import Users
 
 
 def create_user(telegram_id: int) -> None:
