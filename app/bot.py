@@ -5,11 +5,13 @@ from aiogram.utils.exceptions import NetworkError
 from app.misc.env import ApiKeys
 from app.handlers.main_handler import register_all_handlers
 from app.database.models import register_models
+from app.utils.fill_db import fill_database
 
 
 def __on_start_up(dp: Dispatcher):
     register_all_handlers(dp)
     register_models()
+    # fill_database()
     
 
 # start bot
