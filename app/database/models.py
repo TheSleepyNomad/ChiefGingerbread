@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.sql import func
 from app.database.main import Database
 from json import dumps as json_dumps
 
@@ -33,7 +34,7 @@ class Order(Database.BASE):
     quantity =  Column(Integer)
     product_id = Column(Integer, ForeignKey('products.id'))
     user_telegram_id = Column(Integer)
-    date = Column(DateTime)
+    date = Column(DateTime(timezone=True), server_default=func.now())
 
     products = relationship(Products, backref=backref('orders', uselist=True))
 
