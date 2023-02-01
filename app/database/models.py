@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, DateTime
 from sqlalchemy.orm import relationship, backref
 from app.database.main import Database
+from json import dumps as json_dumps
 
 
 class Products(Database.BASE):
@@ -16,7 +17,12 @@ class Products(Database.BASE):
 
     
     def __repr__(self) -> str:
-        return f'{self.name} {self.title} {self.price}'
+        # json string
+        return json_dumps({'id': self.id,
+                           'name': self.name,
+                           'title': self.title,
+                           'price': self.price,
+                           'quantity': self.quantity})
     
 
 class Order(Database.BASE):
@@ -33,7 +39,11 @@ class Order(Database.BASE):
 
     
     def __repr__(self) -> str:
-        return f'{self.quantity} {self.data}'
+        # json string
+        return json_dumps({'id': self.id,
+                           'quantity': self.quantity,
+                           'product_id': self.product_id,
+                           'user_telegram_id': self.user_telegram_id})
 
 
 
