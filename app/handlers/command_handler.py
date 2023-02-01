@@ -2,6 +2,7 @@ from aiogram import Bot, Dispatcher, executor
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputFile, CallbackQuery
 from app.config.config import START_LOGO
 from app.database.methods.get import get_all_products, get_count_all_products
+from math import ceil
 
 
 # btns()
@@ -17,7 +18,8 @@ START_MENU1 = InlineKeyboardMarkup().add(BTN_CATALOG)
 # start msg
 async def send_welcome_msg(msg: Message):
     count_products = get_count_all_products()
-    count = round(count_products / 5) + 1
+    count = ceil(count_products / 5)
+    print(count)
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton('На сайт', callback_data='web_site'))
     markup.add(InlineKeyboardButton('Процесс готовки', callback_data='description'))
     markup.add(InlineKeyboardButton('Каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":"+ str(count) +"}"))
