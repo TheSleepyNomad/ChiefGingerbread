@@ -44,7 +44,7 @@ async def show_catalog(query: CallbackQuery) -> None:
         # init our pagination
         for product in products[slicer - 5:slicer]:
                 item = json_loads(str(product))
-                markup.add(InlineKeyboardButton(item['name'], callback_data=' '))
+                markup.add(InlineKeyboardButton(item['name'], callback_data="{\"page\":\"card\",\"id\":" + str(item['id']) + ",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"))
 
         if page == 1:
             markup.add(
@@ -70,7 +70,18 @@ async def show_catalog(query: CallbackQuery) -> None:
         markup.add(BTN_MENU)
         await query.bot.send_message(query.from_user.id, text='Мы готовим...', reply_markup=markup)
 
-    
+
+
+async def show_product_card(query: CallbackQuery) -> None:
+    await query.bot.answer_callback_query(query.id)
+
+    request = query.data.split('_')
+    json_string = json_loads(request[0])
+    page = int(json_string['PageNum'])
+    count = json_string['CountPage']
+    markup = InlineKeyboardMarkup().add(InlineKeyboardButton('Добавить в корзину', callback_data=" ")).add(InlineKeyboardButton(f'Посмотреть корзину', callback_data=" ")).add(InlineKeyboardButton(f'Назад в каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(page - 1)+ ",\"CountPage\":" + str(count)+"}"))
+    await query.bot.send_message(query.from_user.id, text='Шаблон карточки', reply_markup=markup)
 
 def register_callback_query_handlers(dp: Dispatcher):
     dp.register_callback_query_handler(show_catalog, text_contains='catalog')
+    dp.register_callback_query_handler(show_product_card, text_contains='card')
