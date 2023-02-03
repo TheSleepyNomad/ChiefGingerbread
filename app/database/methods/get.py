@@ -2,7 +2,7 @@ from sqlalchemy.exc import NoResultFound
 
 from app.database.main import Database
 from app.database.models import Products, Order
-
+from app.utils.utils import _convert_in_UserCart
 
 def get_all_products():
     session = Database().session
@@ -21,8 +21,9 @@ def get_count_all_products():
 
 def get_cart_by_user(user_telegram_id: int):
     session = Database().session
-    cart = session.query(Order.quantity, Order.product_id).filter(Order.user_telegram_id == user_telegram_id).all()
-    user_cart = session.query(Order.quantity, Products.name, Products.price).filter(Order.user_telegram_id == user_telegram_id).filter(Order.product_id == Products.id).all()
-    print(user_cart)
+    user_cart = session.query(Order.id, Order.quantity, Products.name, Products.price)\
+        .filter(Order.user_telegram_id == user_telegram_id)\
+            .filter(Order.product_id == Products.id).all()
+    cart = _convert_in_UserCart(user_cart)
     session.close()
     return cart

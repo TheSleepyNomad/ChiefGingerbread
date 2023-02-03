@@ -1,7 +1,7 @@
 from aiogram import Bot, Dispatcher, executor
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputFile, CallbackQuery
 from app.config.config import START_LOGO
-from app.database.methods.get import get_all_products, get_count_all_products
+from app.database.methods.get import get_all_products, get_count_all_products, get_cart_by_user
 from app.database.methods.other import check_user_baket_exist
 from math import ceil
 
@@ -25,7 +25,10 @@ async def send_welcome_msg(msg: Message):
     markup.add(InlineKeyboardButton('Каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":"+ str(count) +"}"))
 
     if check_user_baket_exist:
-        markup.add(InlineKeyboardButton('Корзина', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":" + str(count) + "}"))
+        # think about get count method from db
+        user_products_count = ceil(len(get_cart_by_user(msg.from_user.id)) / 5)
+        print(user_products_count)
+        markup.add(InlineKeyboardButton('Корзина', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":" + str(user_products_count) + "}"))
         
     with open(START_LOGO, 'rb') as img:
         await msg.bot.send_photo(msg.chat.id, photo=InputFile(img), caption='Привет!', reply_markup=markup)

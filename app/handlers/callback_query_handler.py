@@ -47,8 +47,17 @@ async def show_catalog(query: CallbackQuery) -> None:
         for product in products[slicer - 5:slicer]:
                 item = json_loads(str(product))
                 markup.add(InlineKeyboardButton(item['name'], callback_data="{\"page\":\"card\",\"id\":" + str(item['id']) + ",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"))
+        
+        if count == 1 or count == 0:
+            markup.add(
+                InlineKeyboardButton('<--', callback_data=" "),
+                InlineKeyboardButton(f'{page}/1', callback_data=" "),
+                InlineKeyboardButton('-->', callback_data=" "),
+            )
+            await query.bot.send_message(query.from_user.id, text='Мы готовим...', reply_markup=markup)
 
-        if page == 1:
+
+        elif page == 1:
             markup.add(
                 InlineKeyboardButton('<--', callback_data=" "),
                 InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
@@ -123,10 +132,17 @@ async def show_cart(query: CallbackQuery) -> None:
 
         # init our pagination
         for product in products[slicer - 5:slicer]:
-            print(product)
-            markup.add(InlineKeyboardButton('1111', callback_data="{\"page\":\"cart\",\"id\":" + str(product[1]) + ",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"))
+            markup.add(InlineKeyboardButton(f'{product.name} | Кол-во {product.quantity} | Цена {product.price} руб.', callback_data="{\"page\":\"cart\",\"id\":" + str(product.id) + ",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"))
+        
+        if count == 1 or count == 0:
+            markup.add(
+                InlineKeyboardButton('<--', callback_data=" "),
+                InlineKeyboardButton(f'{page}/1', callback_data=" "),
+                InlineKeyboardButton('-->', callback_data=" "),
+            )
+            await query.bot.send_message(query.from_user.id, text='7777', reply_markup=markup)
 
-        if page == 1:
+        elif page == 1:
             markup.add(
                 InlineKeyboardButton('<--', callback_data=" "),
                 InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
