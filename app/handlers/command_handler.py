@@ -20,13 +20,12 @@ START_MENU1 = InlineKeyboardMarkup().add(BTN_CATALOG)
 async def send_welcome_msg(msg: Message):
     count_products = get_count_all_products()
     count = ceil(count_products / 5)
-    print(count)
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton('На сайт', callback_data='web_site'))
     markup.add(InlineKeyboardButton('Процесс готовки', callback_data='description'))
     markup.add(InlineKeyboardButton('Каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":"+ str(count) +"}"))
 
     if check_user_baket_exist:
-        markup.add(InlineKeyboardButton('Корзина', callback_data=' '))
+        markup.add(InlineKeyboardButton('Корзина', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":" + str(count) + "}"))
         
     with open(START_LOGO, 'rb') as img:
         await msg.bot.send_photo(msg.chat.id, photo=InputFile(img), caption='Привет!', reply_markup=markup)
