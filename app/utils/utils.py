@@ -11,7 +11,7 @@ class UserCart:
     price: float
 
 
-def _convert_in_UserCart(user_cart: List[Row]) -> List[UserCart]:
+def _convert_in_UserCart(user_cart: List[Row] | Row) -> List[UserCart]:
     cart = []
     for item in user_cart:
         cart.append(UserCart(id=item[0],
