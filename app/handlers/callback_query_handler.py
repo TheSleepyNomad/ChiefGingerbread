@@ -3,9 +3,11 @@ from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, I
 from app.config.config import START_LOGO
 from app.database.methods.get import get_all_products, get_count_all_products, get_cart_by_user, get_selected_cart_item
 from json import loads as json_loads
-from app.database.methods.create import create_order_record
+from app.database.methods.create import create_order_record, check_order_exist, update_order_record
 from app.database.methods.delete import delele_user_cart, delete_selected_product_from_cart
 from math import ceil
+from app.database.methods.update import reduce_order_record
+from app.database.methods.other import check_user_baket_exist
 
 # {\"method\":\"pagination\",\"NumberPage\":\"10\",\"CountPage\":\"10\"}
 
@@ -48,21 +50,19 @@ async def show_catalog(query: CallbackQuery) -> None:
                 item = json_loads(str(product))
                 markup.add(InlineKeyboardButton(item['name'], callback_data="{\"page\":\"card\",\"id\":" + str(item['id']) + ",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"))
         
-        if count == 1 or count == 0:
-            markup.add(
-                InlineKeyboardButton('<--', callback_data=" "),
-                InlineKeyboardButton(f'{page}/1', callback_data=" "),
-                InlineKeyboardButton('-->', callback_data=" "),
-            )
-            await query.bot.send_message(query.from_user.id, text='Мы готовим...', reply_markup=markup)
-
-
-        elif page == 1:
-            markup.add(
-                InlineKeyboardButton('<--', callback_data=" "),
-                InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
-                InlineKeyboardButton('-->', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"),
-            )
+        if page == 1:
+            if count <= 1:
+                markup.add(
+                    InlineKeyboardButton('<--', callback_data=" "),
+                    InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
+                    InlineKeyboardButton('-->', callback_data=" "),
+                )
+            else:
+                markup.add(
+                    InlineKeyboardButton('<--', callback_data=" "),
+                    InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
+                    InlineKeyboardButton('-->', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"),
+                )
 
         elif page == count:
             markup.add(
@@ -82,19 +82,36 @@ async def show_catalog(query: CallbackQuery) -> None:
         await query.bot.send_message(query.from_user.id, text='Мы готовим...', reply_markup=markup)
 
 async def back_to_menu(query: CallbackQuery) -> None:
+
+    # уменьшит код. раскладку кнопок вывести в отдельный модуль
     await query.bot.answer_callback_query(query.id)
+    await query.bot.delete_message(query.message.chat.id, query.message.message_id)
+
+    count_products = get_count_all_products()
+    count = ceil(count_products / 5)
+    markup = InlineKeyboardMarkup().add(InlineKeyboardButton('На сайт', callback_data='web_site'))
+    markup.add(InlineKeyboardButton('Процесс готовки', callback_data='description'))
+    markup.add(InlineKeyboardButton('Каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":"+ str(count) +"}"))
+    if check_user_baket_exist(query.message.chat.id):
+        # think about get count method from db
+        user_products_count = ceil(len(get_cart_by_user(query.message.chat.id)) / 5)
+        print(user_products_count)
+        markup.add(InlineKeyboardButton('Корзина', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":" + str(user_products_count) + "}"))
+        
+    with open(START_LOGO, 'rb') as img:
+        await query.bot.send_photo(query.message.chat.id, photo=InputFile(img), caption='Привет!', reply_markup=markup)
     # pass
 
 
 async def show_product_card(query: CallbackQuery) -> None:
     await query.bot.answer_callback_query(query.id)
-
+    print(query)
     request = query.data.split('_')
     json_string = json_loads(request[0])
     page = int(json_string['PageNum'])
     count = json_string['CountPage']
     product_id = json_string['id']
-    markup = InlineKeyboardMarkup().add(InlineKeyboardButton('Добавить в корзину', callback_data="{\"act\":\"add\",\"userId\":" + str(query.message.from_user.id)+ ",\"prodId\":" + str(product_id)+"}"))\
+    markup = InlineKeyboardMarkup().add(InlineKeyboardButton('Добавить в корзину', callback_data="{\"act\":\"add\",\"userId\":" + str(query.message.chat.id)+ ",\"prodId\":" + str(product_id)+"}"))\
         .add(InlineKeyboardButton(f'Посмотреть корзину', callback_data=" "))\
         .add(InlineKeyboardButton(f'Назад в каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(page - 1)+ ",\"CountPage\":" + str(count)+"}"))
     
@@ -105,10 +122,15 @@ async def add_in_order(query: CallbackQuery) -> None:
     request = query.data.split('_')
     json_string = json_loads(request[0])
     user_id = json_string['userId']
+    print(user_id)
     product_id = json_string['prodId']
-    create_order_record(product_id=product_id, user_telegram_id=user_id)
-    print('check db!')
-    await query.bot.answer_callback_query(query.id, text='Товар успешно добавлен', show_alert=True)
+    if check_order_exist(product_id, user_id):
+        update_order_record(product_id, user_id)
+        await query.bot.answer_callback_query(query.id, text='Количество товаров увеличено', show_alert=True)
+    else:
+        create_order_record(product_id=product_id, user_telegram_id=user_id)
+        print('check db!')
+        await query.bot.answer_callback_query(query.id, text='Товар успешно добавлен', show_alert=True)
 
 
 async def show_cart(query: CallbackQuery) -> None:
@@ -118,7 +140,7 @@ async def show_cart(query: CallbackQuery) -> None:
 
     if 'pagin' in request[0]:
         # get user cart
-        products = get_cart_by_user(query.message.from_user.id)
+        products = get_cart_by_user(query.message.chat.id)
 
         json_string = json_loads(request[0])
         page = int(json_string['PageNum'])
@@ -135,20 +157,20 @@ async def show_cart(query: CallbackQuery) -> None:
             print(product)
             markup.add(InlineKeyboardButton(f'{product.name} | Кол-во {product.quantity} | Цена {product.price} руб.', callback_data="{\"page\":\"item\",\"id\":" + str(product.id) + ",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"))
         
-        if count == 1 or count == 0:
-            markup.add(
-                InlineKeyboardButton('<--', callback_data=" "),
-                InlineKeyboardButton(f'{page}/1', callback_data=" "),
-                InlineKeyboardButton('-->', callback_data=" "),
-            )
-            await query.bot.send_message(query.from_user.id, text='22227777', reply_markup=markup)
 
-        elif page == 1:
-            markup.add(
-                InlineKeyboardButton('<--', callback_data=" "),
-                InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
-                InlineKeyboardButton('-->', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"),
-            )
+        if page == 1:
+            if count <= 1:
+                markup.add(
+                    InlineKeyboardButton('<--', callback_data=" "),
+                    InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
+                    InlineKeyboardButton('-->', callback_data=" "),
+                )
+            else:
+                markup.add(
+                        InlineKeyboardButton('<--', callback_data=" "),
+                        InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
+                        InlineKeyboardButton('-->', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"),
+                    )
 
         elif page == count:
             markup.add(
@@ -171,7 +193,7 @@ async def show_cart(query: CallbackQuery) -> None:
         await query.bot.send_message(query.from_user.id, text='7777', reply_markup=markup)
 
 async def delete_cart(query: CallbackQuery):
-    if delele_user_cart(query.message.from_user.id):
+    if delele_user_cart(query.message.chat.id):
         await query.bot.answer_callback_query(query.id, text='Ваша корзина удалена!', show_alert=True)
 
         count_products = get_count_all_products()
@@ -189,20 +211,25 @@ async def show_selected_item(query: CallbackQuery):
     page = int(json_string['PageNum'])
     count = json_string['CountPage']
     print(request[0])
-    selected_item = get_selected_cart_item(query.message.from_user.id, selected_item_id)
+    selected_item = get_selected_cart_item(query.message.chat.id, selected_item_id)
     print(selected_item)
     #* Проработать кнопки
     #* Написать парсе реквеста
     #* Написать функцию уменьшение и удаления
-    markup = InlineKeyboardMarkup().add(InlineKeyboardButton('Убрать из корзины', callback_data="{\"act\":\"reduce\",\"userId\":" + str(query.message.from_user.id)+ ",\"prodId\":" + str(selected_item[0].id) +"}"),
-                                        InlineKeyboardButton('Удалить из корзины', callback_data="{\"act\":\"delItm\",\"userId\":" + str(query.message.from_user.id)+ ",\"prodId\":" + str(selected_item[0].id) +"}"),
-                                        InlineKeyboardButton('Добавить в корзину', callback_data="{\"act\":\"add\",\"userId\":" + str(query.message.from_user.id)+ ",\"prodId\":" + str(selected_item[0].id) + "}"))\
+    markup = InlineKeyboardMarkup().add(InlineKeyboardButton('Убрать из корзины', callback_data="{\"act\":\"reduce\",\"userId\":" + str(query.message.chat.id)+ ",\"orderdId\":" + str(selected_item[0].id) +"}"),
+                                        InlineKeyboardButton('Удалить из корзины', callback_data="{\"act\":\"delItm\",\"userId\":" + str(query.message.chat.id)+ ",\"prodId\":" + str(selected_item[0].id) +"}"),
+                                        InlineKeyboardButton('Добавить в корзину', callback_data="{\"act\":\"add\",\"userId\":" + str(query.message.chat.id)+ ",\"prodId\":" + str(selected_item[0].id) + "}"))\
         .add(InlineKeyboardButton(f'Назад в корзину', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":" + str(page - 1)+ ",\"CountPage\":" + str(count)+"}"))
     await query.bot.send_message(query.from_user.id, text='карточка выбранного из корзины товара', reply_markup=markup)
 
 async def reduce_from_order(query: CallbackQuery):
-    await query.bot.answer_callback_query(query.id)
-    pass
+    print('start reduce')
+    request = query.data.split('_')
+    print(request[0])
+    json_string = json_loads(request[0])
+    selected_item_id = int(json_string['orderdId'])
+    reduce_order_record(selected_item_id)
+    await query.bot.answer_callback_query(query.id, text='Количество товаров уменьшено на 1', show_alert=True)
 
 
 async def deleted_selected_item_from_order(query: CallbackQuery):
@@ -212,7 +239,7 @@ async def deleted_selected_item_from_order(query: CallbackQuery):
     pass
     json_string = json_loads(request[0])
     selected_item_id = int(json_string['prodId'])
-    if delete_selected_product_from_cart(query.message.from_user.id, selected_item_id):
+    if delete_selected_product_from_cart(query.message.chat.id, selected_item_id):
         await query.bot.answer_callback_query(query.id, text='Товар убран из корзины', show_alert=True)
     await query.bot.answer_callback_query(query.id)
     # after refactoring write markup for showing cart again

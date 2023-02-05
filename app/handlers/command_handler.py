@@ -18,15 +18,17 @@ START_MENU1 = InlineKeyboardMarkup().add(BTN_CATALOG)
 # handlers
 # start msg
 async def send_welcome_msg(msg: Message):
+    print(msg.chat.id)
+    print(msg)
     count_products = get_count_all_products()
     count = ceil(count_products / 5)
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton('На сайт', callback_data='web_site'))
     markup.add(InlineKeyboardButton('Процесс готовки', callback_data='description'))
     markup.add(InlineKeyboardButton('Каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":"+ str(count) +"}"))
-
-    if check_user_baket_exist:
+    print(check_user_baket_exist(msg.chat.id))
+    if check_user_baket_exist(msg.chat.id):
         # think about get count method from db
-        user_products_count = ceil(len(get_cart_by_user(msg.from_user.id)) / 5)
+        user_products_count = ceil(len(get_cart_by_user(msg.chat.id)) / 5)
         print(user_products_count)
         markup.add(InlineKeyboardButton('Корзина', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":" + str(user_products_count) + "}"))
         
