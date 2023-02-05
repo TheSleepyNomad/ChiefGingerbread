@@ -1,5 +1,5 @@
-from aiogram import Bot, Dispatcher, executor
-from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram import Dispatcher
+from aiogram.types import Message
 
 
 # if user write something wrong
