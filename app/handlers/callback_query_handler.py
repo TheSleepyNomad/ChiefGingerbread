@@ -8,109 +8,30 @@ from app.database.methods.delete import delele_user_cart, delete_selected_produc
 from math import ceil
 from app.database.methods.update import reduce_order_record
 from app.database.methods.other import check_user_baket_exist
-
-# {\"method\":\"pagination\",\"NumberPage\":\"10\",\"CountPage\":\"10\"}
-
-# btns
-# ! delete in future
-BTN_NEXT = InlineKeyboardButton('-->', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":\"s\",\"CountPage\":\"s\"}")
-BTN_BACK = InlineKeyboardButton('<--', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":\"s\",\"CountPage\":\"s\"}")
-
-# * migrate in config file
-BTN_MENU = InlineKeyboardButton('Вернуться в меню', callback_data='menu')
-BTN_CURRENT_PAGE = InlineKeyboardButton('ТекСтр/Из', callback_data=' ')
-
-# keyboard
-CATALOG_MENU = InlineKeyboardMarkup().add(BTN_BACK, BTN_CURRENT_PAGE, BTN_NEXT).add(BTN_MENU)
+from app.handlers.command_handler import send_welcome_msg
+from app.markup.markup import create_catalog_markup, create_cart_markup
+from app.utils.utils import _get_data_from_json
 
 
 async def show_catalog(query: CallbackQuery) -> None:
     await query.bot.answer_callback_query(query.id)
-    # get our data
-    request = query.data.split('_')
-
-    if request[0] == 'menu':
-       await query.bot.delete_message(query.message.chat.id, query.message.message_id)
-
-    elif "pagin" in request[0]:
-        # parse our callback from query
-        json_string = json_loads(request[0])
-        page = int(json_string['PageNum'])
-        count = json_string['CountPage']
-
-        # set slicer for List[Products]
-        slicer = int(5 * page)
-        products = get_all_products()
-
-        # set new markup with products name
-        markup = InlineKeyboardMarkup()
-
-        # init our pagination
-        for product in products[slicer - 5:slicer]:
-                item = json_loads(str(product))
-                markup.add(InlineKeyboardButton(item['name'], callback_data="{\"page\":\"card\",\"id\":" + str(item['id']) + ",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"))
-        
-        if page == 1:
-            if count <= 1:
-                markup.add(
-                    InlineKeyboardButton('<--', callback_data=" "),
-                    InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
-                    InlineKeyboardButton('-->', callback_data=" "),
-                )
-            else:
-                markup.add(
-                    InlineKeyboardButton('<--', callback_data=" "),
-                    InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
-                    InlineKeyboardButton('-->', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"),
-                )
-
-        elif page == count:
-            markup.add(
-                InlineKeyboardButton('<--', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(page - 1)+ ",\"CountPage\":" + str(count)+"}"),
-                InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
-                InlineKeyboardButton('-->', callback_data=" "),
-            )
-
-        else:
-            markup.add(
-                InlineKeyboardButton('<--', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(page - 1)+ ",\"CountPage\":" + str(count)+"}"),
-                InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
-                InlineKeyboardButton('-->', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"),
-            )
-
-        markup.add(BTN_MENU)
-        await query.bot.send_message(query.from_user.id, text='Мы готовим...', reply_markup=markup)
+    await query.bot.delete_message(query.message.chat.id, query.message.message_id)
+    await query.bot.send_message(query.from_user.id, text='Мы готовим...', reply_markup=create_catalog_markup(query))
 
 async def back_to_menu(query: CallbackQuery) -> None:
-
-    # уменьшит код. раскладку кнопок вывести в отдельный модуль
     await query.bot.answer_callback_query(query.id)
     await query.bot.delete_message(query.message.chat.id, query.message.message_id)
-
-    count_products = get_count_all_products()
-    count = ceil(count_products / 5)
-    markup = InlineKeyboardMarkup().add(InlineKeyboardButton('На сайт', callback_data='web_site'))
-    markup.add(InlineKeyboardButton('Процесс готовки', callback_data='description'))
-    markup.add(InlineKeyboardButton('Каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":"+ str(count) +"}"))
-    if check_user_baket_exist(query.message.chat.id):
-        # think about get count method from db
-        user_products_count = ceil(len(get_cart_by_user(query.message.chat.id)) / 5)
-        print(user_products_count)
-        markup.add(InlineKeyboardButton('Корзина', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":" + str(user_products_count) + "}"))
-        
-    with open(START_LOGO, 'rb') as img:
-        await query.bot.send_photo(query.message.chat.id, photo=InputFile(img), caption='Привет!', reply_markup=markup)
-    # pass
+    await send_welcome_msg(query.message)
 
 
 async def show_product_card(query: CallbackQuery) -> None:
     await query.bot.answer_callback_query(query.id)
-    print(query)
+    await query.bot.delete_message(query.message.chat.id, query.message.message_id)
     request = query.data.split('_')
     json_string = json_loads(request[0])
     page = int(json_string['PageNum'])
     count = json_string['CountPage']
-    product_id = json_string['id']
+    product_id = json_string['prodId']
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton('Добавить в корзину', callback_data="{\"act\":\"add\",\"userId\":" + str(query.message.chat.id)+ ",\"prodId\":" + str(product_id)+"}"))\
         .add(InlineKeyboardButton(f'Посмотреть корзину', callback_data=" "))\
         .add(InlineKeyboardButton(f'Назад в каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(page - 1)+ ",\"CountPage\":" + str(count)+"}"))
@@ -122,110 +43,48 @@ async def add_in_order(query: CallbackQuery) -> None:
     request = query.data.split('_')
     json_string = json_loads(request[0])
     user_id = json_string['userId']
-    print(user_id)
-    product_id = json_string['prodId']
+    product_id = json_string['orderdId']
     if check_order_exist(product_id, user_id):
         update_order_record(product_id, user_id)
         await query.bot.answer_callback_query(query.id, text='Количество товаров увеличено', show_alert=True)
     else:
         create_order_record(product_id=product_id, user_telegram_id=user_id)
-        print('check db!')
         await query.bot.answer_callback_query(query.id, text='Товар успешно добавлен', show_alert=True)
 
 
 async def show_cart(query: CallbackQuery) -> None:
     await query.bot.answer_callback_query(query.id)
-    # get our data from button
-    request = query.data.split('_')
-
-    if 'pagin' in request[0]:
-        # get user cart
-        products = get_cart_by_user(query.message.chat.id)
-
-        json_string = json_loads(request[0])
-        page = int(json_string['PageNum'])
-        count = json_string['CountPage']
-
-        # set slicer for List[Products]
-        slicer = int(5 * page)
-
-        # set new markup with products name
-        markup = InlineKeyboardMarkup()
-
-        # init our pagination
-        for product in products[slicer - 5:slicer]:
-            print(product)
-            markup.add(InlineKeyboardButton(f'{product.name} | Кол-во {product.quantity} | Цена {product.price} руб.', callback_data="{\"page\":\"item\",\"id\":" + str(product.id) + ",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"))
-        
-
-        if page == 1:
-            if count <= 1:
-                markup.add(
-                    InlineKeyboardButton('<--', callback_data=" "),
-                    InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
-                    InlineKeyboardButton('-->', callback_data=" "),
-                )
-            else:
-                markup.add(
-                        InlineKeyboardButton('<--', callback_data=" "),
-                        InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
-                        InlineKeyboardButton('-->', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"),
-                    )
-
-        elif page == count:
-            markup.add(
-                InlineKeyboardButton('<--', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":" + str(page - 1)+ ",\"CountPage\":" + str(count)+"}"),
-                InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
-                InlineKeyboardButton('-->', callback_data=" "),
-            )
-
-        else:
-            markup.add(
-                InlineKeyboardButton('<--', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":" + str(page - 1)+ ",\"CountPage\":" + str(count)+"}"),
-                InlineKeyboardButton(f'{page}/{count}', callback_data=" "),
-                InlineKeyboardButton('-->', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":" + str(page + 1)+ ",\"CountPage\":" + str(count)+"}"),
-            )
-
-        markup.add(BTN_MENU,
-                InlineKeyboardButton('Очистить корзину', callback_data='delete_backet'),
-                InlineKeyboardButton('Оплатить', callback_data=' '))
-        
-        await query.bot.send_message(query.from_user.id, text='7777', reply_markup=markup)
+    await query.bot.delete_message(query.message.chat.id, query.message.message_id)
+    await query.bot.send_message(query.from_user.id, text='7777', reply_markup=create_cart_markup(query))
 
 async def delete_cart(query: CallbackQuery):
     if delele_user_cart(query.message.chat.id):
         await query.bot.answer_callback_query(query.id, text='Ваша корзина удалена!', show_alert=True)
+        await query.bot.delete_message(query.message.chat.id, query.message.message_id)
+        await send_welcome_msg(query.message)
+    else:
+        await query.bot.answer_callback_query(query.id, text='Произошла ошибка при удалении. Обратитесь к администратору', show_alert=True)
 
-        count_products = get_count_all_products()
-        count = ceil(count_products / 5)
-        markup = InlineKeyboardMarkup().add(InlineKeyboardButton('На сайт', callback_data='web_site'))
-        markup.add(InlineKeyboardButton('Процесс готовки', callback_data='description'))
-        markup.add(InlineKeyboardButton('Каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":"+ str(count) +"}"))
-        await query.bot.send_message(query.from_user.id, text='7777', reply_markup=markup)
 
 async def show_selected_item(query: CallbackQuery):
     await query.bot.answer_callback_query(query.id)
+    await query.bot.delete_message(query.message.chat.id, query.message.message_id)
     request = query.data.split('_')
+    print(request)
     json_string = json_loads(request[0])
-    selected_item_id = int(json_string['id'])
+    selected_item_id = int(json_string['orderId'])
     page = int(json_string['PageNum'])
     count = json_string['CountPage']
-    print(request[0])
-    selected_item = get_selected_cart_item(query.message.chat.id, selected_item_id)
-    print(selected_item)
-    #* Проработать кнопки
-    #* Написать парсе реквеста
-    #* Написать функцию уменьшение и удаления
+    data = _get_data_from_json(query)
+    selected_item = get_selected_cart_item(query.message.chat.id, data.order_id)
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton('Убрать из корзины', callback_data="{\"act\":\"reduce\",\"userId\":" + str(query.message.chat.id)+ ",\"orderdId\":" + str(selected_item[0].id) +"}"),
-                                        InlineKeyboardButton('Удалить из корзины', callback_data="{\"act\":\"delItm\",\"userId\":" + str(query.message.chat.id)+ ",\"prodId\":" + str(selected_item[0].id) +"}"),
-                                        InlineKeyboardButton('Добавить в корзину', callback_data="{\"act\":\"add\",\"userId\":" + str(query.message.chat.id)+ ",\"prodId\":" + str(selected_item[0].id) + "}"))\
+                                        InlineKeyboardButton('Удалить из корзины', callback_data="{\"act\":\"delItm\",\"userId\":" + str(query.message.chat.id)+ ",\"orderdId\":" + str(selected_item[0].id) +"}"),
+                                        InlineKeyboardButton('Добавить в корзину', callback_data="{\"act\":\"add\",\"userId\":" + str(query.message.chat.id)+ ",\"orderdId\":" + str(selected_item[0].id) + "}"))\
         .add(InlineKeyboardButton(f'Назад в корзину', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":" + str(page - 1)+ ",\"CountPage\":" + str(count)+"}"))
     await query.bot.send_message(query.from_user.id, text='карточка выбранного из корзины товара', reply_markup=markup)
 
 async def reduce_from_order(query: CallbackQuery):
-    print('start reduce')
     request = query.data.split('_')
-    print(request[0])
     json_string = json_loads(request[0])
     selected_item_id = int(json_string['orderdId'])
     reduce_order_record(selected_item_id)
@@ -233,16 +92,14 @@ async def reduce_from_order(query: CallbackQuery):
 
 
 async def deleted_selected_item_from_order(query: CallbackQuery):
-    print('we are here')
     request = query.data.split('_')
-    print(request[0])
-    pass
     json_string = json_loads(request[0])
     selected_item_id = int(json_string['prodId'])
     if delete_selected_product_from_cart(query.message.chat.id, selected_item_id):
         await query.bot.answer_callback_query(query.id, text='Товар убран из корзины', show_alert=True)
-    await query.bot.answer_callback_query(query.id)
-    # after refactoring write markup for showing cart again
+        await query.bot.delete_message(query.message.chat.id, query.message.message_id)
+    else:
+        await query.bot.answer_callback_query(query.id, text='Произошла ошибка при удалении. Обратитесь к администратору', show_alert=True)
 
 
 def register_callback_query_handlers(dp: Dispatcher):

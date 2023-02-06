@@ -9,7 +9,6 @@ async def send_answer_for_unknow_msg(msg: Message):
     
 
 def register_other_handlers(dp: Dispatcher):
-
     dp.register_message_handler(send_answer_for_unknow_msg, content_types=['text'], state=None)
 
     
