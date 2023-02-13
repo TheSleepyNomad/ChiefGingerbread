@@ -11,7 +11,8 @@ from app.utils.fill_db import fill_database
 def __on_start_up(dp: Dispatcher):
     register_all_handlers(dp)
     register_models()
-    # fill_database()
+    # add debug check
+    fill_database()
     
 
 # start bot

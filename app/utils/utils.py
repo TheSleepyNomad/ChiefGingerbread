@@ -17,9 +17,9 @@ class QueryData:
     page: int = 0
     count_page: int = 0
     slicer: int = 0
-    product_id: str = ''
+    product_id: int = 0
     order_id: int = 0
-    user_id: str = ''
+    user_id: int = 0
 
 
 
@@ -39,8 +39,7 @@ def _get_data_from_json(query: CallbackQuery) -> QueryData:
         page=int(json_string['PageNum']) if 'PageNum' in request[0] else 0,
         count_page=int(json_string['CountPage']) if 'CountPage' in request[0] else 0,
         slicer=5*int(json_string['PageNum']) if 'PageNum' in request[0] else 0,
-        product_id=json_string['prodId'] if 'prodId' in request[0] else '',
-        order_id=int(json_string['orderdId']) if 'orderdId' in request[0] else 0,
-        user_id=json_string['userId'] if 'userId' in request[0] else ''
-    )
+        product_id=int(json_string['prodId']) if 'prodId' in request[0] else 0,
+        order_id=int(json_string['orderId']) if 'orderId' in request[0] else 0,
+        user_id=int(json_string['userId']) if 'userId' in request[0] else 0)
     return data

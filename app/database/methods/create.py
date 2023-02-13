@@ -9,10 +9,14 @@ def create_order_record(product_id: int, user_telegram_id: int) -> None:
         session.commit()
 
 
-def update_order_record(product_id: int, user_telegram_id: int) -> None:
+def update_order_record(product_id: int, user_telegram_id: int, from_cart:bool=False) -> None:
      session = Database().session
-     session.query(Order).filter(Order.id == product_id and Order.user_telegram_id == user_telegram_id).update({'quantity': Order.quantity + 1})
-     session.commit()
+     if from_cart:
+          session.query(Order).filter(Order.id == product_id and Order.user_telegram_id == user_telegram_id).update({'quantity': Order.quantity + 1})
+          session.commit()
+     else:
+        session.query(Order).filter(Order.product_id == product_id and Order.user_telegram_id == user_telegram_id).update({'quantity': Order.quantity + 1})
+        session.commit()
 
 def check_order_exist(product_id: int, user_telegram_id: int) -> bool:
     session = Database().session
