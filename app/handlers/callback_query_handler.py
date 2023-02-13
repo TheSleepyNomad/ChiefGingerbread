@@ -32,14 +32,20 @@ async def show_product_card(query: CallbackQuery) -> None:
 
 async def add_in_order(query: CallbackQuery) -> None:
     data = _get_data_from_json(query)
-    print(data)
+
+    # if user increases the quantity of products from the cart
     if data.order_id:
         update_order_record(data.order_id, data.user_id, from_cart=True)
         await query.bot.answer_callback_query(query.id, text='Количество товаров увеличено', show_alert=True)
+
+    # if user select product and try add them from catalog
     elif data.product_id:
+
+        # if user already add product before -> update quantity
         if check_order_exist(data.product_id, data.user_id):
             update_order_record(data.product_id, data.user_id)
             await query.bot.answer_callback_query(query.id, text='Количество товаров увеличено', show_alert=True)
+
         else:
             create_order_record(product_id=data.product_id, user_telegram_id=data.user_id)
             await query.bot.answer_callback_query(query.id, text='Товар успешно добавлен', show_alert=True)
@@ -67,9 +73,10 @@ async def show_selected_item(query: CallbackQuery) -> None:
 
 async def reduce_from_order(query: CallbackQuery) -> None:
     data = _get_data_from_json(query)
-    reduce_order_record(data.order_id)
-    #! не работает
-    await query.bot.answer_callback_query(query.id, text='Количество товаров уменьшено на 1', show_alert=True)
+    if reduce_order_record(data.order_id):
+        await query.bot.answer_callback_query(query.id, text='Количество товаров уменьшено на 1', show_alert=True)
+    else:
+        await query.bot.answer_callback_query(query.id, text='Нельзя убавить. Всего 1 штука в корзине', show_alert=True)
 
 
 async def deleted_selected_item_from_order(query: CallbackQuery) -> None:
