@@ -1,7 +1,7 @@
 from aiogram import Bot, Dispatcher, executor
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputFile, CallbackQuery
 from app.config.config import START_LOGO
-from app.database.methods.get import get_all_products, get_count_all_products, get_cart_by_user, get_selected_cart_item, get_product_by_id
+from app.database.methods.get import get_all_products, get_count_all_products, get_cart_by_user, get_selected_cart_item, get_product_by_id, get_product_quantity_from_cart
 from json import loads as json_loads
 from app.database.methods.create import create_order_record, check_order_exist, update_order_record
 from app.database.methods.delete import delele_user_cart, delete_selected_product_from_cart
@@ -11,6 +11,7 @@ from app.database.methods.other import check_user_baket_exist
 from app.handlers.command_handler import send_welcome_msg
 from app.markup.markup import create_catalog_markup, create_cart_markup, create_selected_item_markup, create_product_card_markup, create_start_markup
 from app.utils.utils import _get_data_from_json
+from app.misc.data import MsgTemplate
 
 
 async def show_catalog(query: CallbackQuery) -> None:
@@ -33,7 +34,7 @@ async def show_product_card(query: CallbackQuery) -> None:
     await query.bot.delete_message(query.message.chat.id, query.message.message_id)
     # send product card with img
     with open(product.img_path, 'rb') as img:
-        await query.bot.send_photo(query.from_user.id, photo=InputFile(img), caption='Шаблон карточки!', reply_markup=create_product_card_markup(query))
+        await query.bot.send_photo(query.from_user.id, photo=InputFile(img), caption=MsgTemplate.product_card_msg.format(name=product.name,title=product.title,price=product.price), reply_markup=create_product_card_markup(query), parse_mode='HTML')
 
 
 async def add_in_order(query: CallbackQuery) -> None:
@@ -55,6 +56,7 @@ async def add_in_order(query: CallbackQuery) -> None:
         else:
             create_order_record(product_id=data.product_id, user_telegram_id=data.user_id)
             await query.bot.answer_callback_query(query.id, text='Товар успешно добавлен', show_alert=True)
+            await query.bot.edit_message_text(text='2222', message_id=query.message.message_id)
 
 
 

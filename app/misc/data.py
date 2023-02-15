@@ -9,6 +9,14 @@ from json import loads as json_loads
 class MsgTemplate:
     welcome_msg = ''
     text_enter_msg = ''
+    catalog_msg = ''
+    product_card_msg = """
+    Наименование: <b><i>{name}</i></b>
+
+    Описание: {title}
+
+    Стоимость: <i>{price}</i> руб.
+    """
     
 
 @dataclass
