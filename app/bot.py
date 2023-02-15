@@ -13,7 +13,8 @@ def __on_start_up(dp: Dispatcher):
     register_all_handlers(dp)
     register_models()
     if DEBUG_MODE:
-        fill_database()
+        # fill_database()
+        pass
     
 
 # start bot

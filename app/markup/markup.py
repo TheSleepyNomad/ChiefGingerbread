@@ -119,7 +119,7 @@ def create_cart_markup(query: CallbackQuery) -> InlineKeyboardMarkup:
 
         markup.add(InlineKeyboardButton('Вернуться в меню', callback_data='menu'),
                 InlineKeyboardButton('Очистить корзину', callback_data='delete_backet'),
-                InlineKeyboardButton('Оплатить', callback_data=' '))
+                InlineKeyboardButton('Оплатить', callback_data='payment'))
         
     return markup
     

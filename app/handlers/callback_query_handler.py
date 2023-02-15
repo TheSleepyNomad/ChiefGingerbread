@@ -1,5 +1,5 @@
 from aiogram import Bot, Dispatcher, executor
-from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputFile, CallbackQuery
+from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputFile, CallbackQuery, LabeledPrice
 from app.config.config import START_LOGO
 from app.database.methods.get import get_all_products, get_count_all_products, get_cart_by_user, get_selected_cart_item, get_product_by_id, get_product_quantity_from_cart
 from json import loads as json_loads
@@ -121,6 +121,18 @@ async def deleted_selected_item_from_order(query: CallbackQuery) -> None:
         await query.bot.answer_callback_query(query.id, text='Произошла ошибка при удалении. Обратитесь к администратору', show_alert=True)
 
 
+async def payment_process_query(query: CallbackQuery) -> None:
+    items = [
+        LabeledPrice(label='товар№1', amount=100*500),
+        LabeledPrice(label='товар№2', amount=100*50),
+        LabeledPrice(label='товар№3', amount=100*1100),
+        LabeledPrice(label='товар№4', amount=100*5),
+        LabeledPrice(label='товар№5', amount=100*123),
+    ]
+    await query.bot.answer_callback_query(query.id)
+    await query.bot.send_invoice(chat_id=query.message.chat.id,title='Тайт оплаты',description='Описание',provider_token='1744374395:TEST:5b88879c3684482b9133',currency='RUB',prices=items,start_parameter='time-machine-example',payload='test')
+
+
 def register_callback_query_handlers(dp: Dispatcher) -> None:
     dp.register_callback_query_handler(show_catalog, text_contains='catalog')
     dp.register_callback_query_handler(show_product_card, text_contains='card')
@@ -131,3 +143,4 @@ def register_callback_query_handlers(dp: Dispatcher) -> None:
     dp.register_callback_query_handler(add_in_order, text_contains='add')
     dp.register_callback_query_handler(reduce_from_order, text_contains='reduce')
     dp.register_callback_query_handler(deleted_selected_item_from_order, text_contains='delItm')
+    dp.register_callback_query_handler(payment_process_query, text_contains='payment')
