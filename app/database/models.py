@@ -14,6 +14,7 @@ class Products(Database.BASE):
     title = Column(String)
     price = Column(Float)
     quantity =  Column(Integer)
+    img_path = Column(String)
     is_active = Column(Boolean)
 
     
@@ -23,6 +24,7 @@ class Products(Database.BASE):
                            'name': self.name,
                            'title': self.title,
                            'price': self.price,
+                           'img_path': self.img_path,
                            'quantity': self.quantity})
     
 
