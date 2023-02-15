@@ -26,7 +26,10 @@ async def back_to_menu(query: CallbackQuery) -> None:
 
 
 async def show_product_card(query: CallbackQuery) -> None:
-    # collect data from database
+    """
+    This function is responsible for showing product card
+    """
+    # collecting data from database and query
     data = _get_data_from_json(query)
     product = get_product_by_id(data.product_id)
     # send answer and delete last msg
@@ -38,6 +41,9 @@ async def show_product_card(query: CallbackQuery) -> None:
 
 
 async def add_in_order(query: CallbackQuery) -> None:
+    """
+    This function is responsible for adding a product and updating its quantity in the cart
+    """
     data = _get_data_from_json(query)
     old_caption = query.message.caption
     # if user increases the quantity of products from the cart
@@ -50,15 +56,22 @@ async def add_in_order(query: CallbackQuery) -> None:
 
         # if user already add product before -> update quantity
         if check_order_exist(data.product_id, data.user_id):
+            # update quantity in order
             update_order_record(data.product_id, data.user_id)
+            # collect current product quantity
             quantity = get_product_quantity_from_cart(data.user_id, data.product_id)
+            # delete last string in caption. 
+            # find penult string and replace all after her
             caption = old_caption.replace(old_caption[(old_caption.find('руб.') + 4):], '\nСейчас в корзине: {} шт.'.format(quantity))
+            # send answer and new caption
             await query.bot.answer_callback_query(query.id, text='Количество товаров увеличено', show_alert=True)
             await query.bot.edit_message_caption(chat_id=query.message.chat.id, message_id=query.message.message_id, caption=caption, reply_markup=query.message.reply_markup)
 
+        # if user add product in cart first time
         else:
             create_order_record(product_id=data.product_id, user_telegram_id=data.user_id)
             quantity = get_product_quantity_from_cart(data.user_id, data.product_id)
+            # send answer and new caption
             await query.bot.answer_callback_query(query.id, text='Товар успешно добавлен', show_alert=True)
             await query.bot.edit_message_caption(chat_id=query.message.chat.id, message_id=query.message.message_id, caption=query.message.caption + '\nСейчас в корзине: {} шт.'.format(quantity), reply_markup=query.message.reply_markup)
 
