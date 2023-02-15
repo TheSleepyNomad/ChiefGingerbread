@@ -10,6 +10,12 @@ def get_all_products():
     session.close()
     return result
 
+def get_product_by_id(id:int):
+    session = Database().session
+    result = session.query(Products).filter(Products.id == id).one()
+    session.close()
+    return result
+
 def get_count_all_products():
     session = Database().session
     result = session.query(Products).count()

@@ -6,13 +6,14 @@ from app.misc.env import ApiKeys
 from app.handlers.main_handler import register_all_handlers
 from app.database.models import register_models
 from app.utils.fill_db import fill_database
+from app.config.config import DEBUG_MODE
 
 
 def __on_start_up(dp: Dispatcher):
     register_all_handlers(dp)
     register_models()
-    # add debug check
-    fill_database()
+    if DEBUG_MODE:
+        fill_database()
     
 
 # start bot

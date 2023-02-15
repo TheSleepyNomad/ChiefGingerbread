@@ -1,7 +1,7 @@
 from aiogram import Bot, Dispatcher, executor
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputFile, CallbackQuery
 from app.config.config import START_LOGO
-from app.database.methods.get import get_all_products, get_count_all_products, get_cart_by_user, get_selected_cart_item
+from app.database.methods.get import get_all_products, get_count_all_products, get_cart_by_user, get_selected_cart_item, get_product_by_id
 from json import loads as json_loads
 from app.database.methods.create import create_order_record, check_order_exist, update_order_record
 from app.database.methods.delete import delele_user_cart, delete_selected_product_from_cart
@@ -25,9 +25,15 @@ async def back_to_menu(query: CallbackQuery) -> None:
 
 
 async def show_product_card(query: CallbackQuery) -> None:
+    # collect data from database
+    data = _get_data_from_json(query)
+    product = get_product_by_id(data.product_id)
+    # send answer and delete last msg
     await query.bot.answer_callback_query(query.id)
     await query.bot.delete_message(query.message.chat.id, query.message.message_id)
-    await query.bot.send_message(query.from_user.id, text='Шаблон карточки', reply_markup=create_product_card_markup(query))
+    # send product card with img
+    with open(product.img_path, 'rb') as img:
+        await query.bot.send_photo(query.from_user.id, photo=InputFile(img), caption='Шаблон карточки!', reply_markup=create_product_card_markup(query))
 
 
 async def add_in_order(query: CallbackQuery) -> None:
