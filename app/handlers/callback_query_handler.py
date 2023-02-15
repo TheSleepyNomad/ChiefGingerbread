@@ -56,7 +56,8 @@ async def add_in_order(query: CallbackQuery) -> None:
         user_products_count = ceil(len(get_cart_by_user(query.message.chat.id)) / 5)
         # if dont have products in cart yet, but wanna add
         # save markup and insert new button after first button
-        query.message.reply_markup.inline_keyboard.insert(1, [InlineKeyboardButton('Посмотреть корзину', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":" + str(user_products_count) + "}")])
+        if len(query.message.reply_markup.inline_keyboard) < 3:
+            query.message.reply_markup.inline_keyboard.insert(1, [InlineKeyboardButton('Посмотреть корзину', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":" + str(user_products_count) + "}")])
         # if user already add product before -> update quantity
         if check_order_exist(data.product_id, data.user_id):
             # update quantity in order
