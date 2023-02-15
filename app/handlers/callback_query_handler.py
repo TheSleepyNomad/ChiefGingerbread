@@ -9,7 +9,7 @@ from math import ceil
 from app.database.methods.update import reduce_order_record
 from app.database.methods.other import check_user_baket_exist
 from app.handlers.command_handler import send_welcome_msg
-from app.markup.markup import create_catalog_markup, create_cart_markup, create_selected_item_markup, create_product_card_markup
+from app.markup.markup import create_catalog_markup, create_cart_markup, create_selected_item_markup, create_product_card_markup, create_start_markup
 from app.utils.utils import _get_data_from_json
 
 
@@ -84,8 +84,7 @@ async def deleted_selected_item_from_order(query: CallbackQuery) -> None:
     if delete_selected_product_from_cart(query.message.chat.id, data.order_id):
         await query.bot.answer_callback_query(query.id, text='Товар убран из корзины', show_alert=True)
         await query.bot.delete_message(query.message.chat.id, query.message.message_id)
-        #! Запрос пустой
-        await query.bot.send_message(query.from_user.id, text='7777', reply_markup=create_cart_markup(query))
+        await query.bot.send_message(query.from_user.id, text='7777', reply_markup=create_start_markup(query.message.chat.id))
     else:
         await query.bot.answer_callback_query(query.id, text='Произошла ошибка при удалении. Обратитесь к администратору', show_alert=True)
 
