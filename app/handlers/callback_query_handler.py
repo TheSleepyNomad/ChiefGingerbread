@@ -53,7 +53,10 @@ async def add_in_order(query: CallbackQuery) -> None:
 
     # if user select product and try add them from catalog
     elif data.product_id:
-
+        user_products_count = ceil(len(get_cart_by_user(query.message.chat.id)) / 5)
+        # if dont have products in cart yet, but wanna add
+        # save markup and insert new button after first button
+        query.message.reply_markup.inline_keyboard.insert(1, [InlineKeyboardButton('Посмотреть корзину', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":" + str(user_products_count) + "}")])
         # if user already add product before -> update quantity
         if check_order_exist(data.product_id, data.user_id):
             # update quantity in order
@@ -73,11 +76,15 @@ async def add_in_order(query: CallbackQuery) -> None:
             quantity = get_product_quantity_from_cart(data.user_id, data.product_id)
             # send answer and new caption
             await query.bot.answer_callback_query(query.id, text='Товар успешно добавлен', show_alert=True)
-            await query.bot.edit_message_caption(chat_id=query.message.chat.id, message_id=query.message.message_id, caption=query.message.caption + '\nСейчас в корзине: {} шт.'.format(quantity), reply_markup=query.message.reply_markup)
+            await query.bot.edit_message_caption(chat_id=query.message.chat.id, 
+                                                 message_id=query.message.message_id, 
+                                                 caption=query.message.caption + '\nСейчас в корзине: {} шт.'.format(quantity), 
+                                                 reply_markup=query.message.reply_markup)
 
 
 
 async def show_cart(query: CallbackQuery) -> None:
+    print(query.data)
     await query.bot.answer_callback_query(query.id)
     await query.bot.delete_message(query.message.chat.id, query.message.message_id)
     await query.bot.send_message(query.from_user.id, text='7777', reply_markup=create_cart_markup(query))

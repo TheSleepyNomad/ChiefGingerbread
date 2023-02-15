@@ -11,4 +11,4 @@ LOGS_DIR = BASE_DIR.joinpath('logs')
 # templates dirs
 DOC_TEMPLATES_DIR = BASE_DIR.joinpath('misc').joinpath('templates')
 
-DEBUG_MODE = False
+DEBUG_MODE = True

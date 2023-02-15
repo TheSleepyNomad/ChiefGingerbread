@@ -136,7 +136,9 @@ def create_selected_item_markup(query: CallbackQuery) -> InlineKeyboardMarkup:
 
 def create_product_card_markup(query: CallbackQuery) -> InlineKeyboardMarkup:
     data = _get_data_from_json(query)
-    markup = InlineKeyboardMarkup().add(InlineKeyboardButton('Добавить в корзину', callback_data="{\"act\":\"add\",\"userId\":" + str(query.message.chat.id)+ ",\"prodId\":" + str(data.product_id)+"}"))\
-        .add(InlineKeyboardButton(f'Посмотреть корзину', callback_data=" "))\
-        .add(InlineKeyboardButton(f'Назад в каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(data.page - 1)+ ",\"CountPage\":" + str(data.count_page)+"}"))
+    user_products_count = ceil(len(get_cart_by_user(query.message.chat.id)) / 5)
+    markup = InlineKeyboardMarkup().add(InlineKeyboardButton('Добавить в корзину', callback_data="{\"act\":\"add\",\"userId\":" + str(query.message.chat.id)+ ",\"prodId\":" + str(data.product_id)+"}"))
+    if user_products_count:
+        markup.add(InlineKeyboardButton('Посмотреть корзину', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":" + str(user_products_count) + "}"))
+    markup.add(InlineKeyboardButton(f'Назад в каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(data.page - 1)+ ",\"CountPage\":" + str(data.count_page)+"}"))
     return markup
