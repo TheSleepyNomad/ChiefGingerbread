@@ -18,10 +18,9 @@ def get_product_by_id(id:int):
 
 def get_product_quantity_from_cart(user_telegram_id: int, product_id: int):
     session = Database().session
-    result = session.query(Order.quantity).filter(Order.user_telegram_id == user_telegram_id and Order.product_id == product_id).one()
+    result = session.query(Order.quantity).filter_by(user_telegram_id=user_telegram_id, product_id=product_id).one()
     if result:
-        print(result)
-        return result
+        return result[0]
     
 
 def get_count_all_products():

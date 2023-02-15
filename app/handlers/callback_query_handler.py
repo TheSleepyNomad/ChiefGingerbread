@@ -39,7 +39,7 @@ async def show_product_card(query: CallbackQuery) -> None:
 
 async def add_in_order(query: CallbackQuery) -> None:
     data = _get_data_from_json(query)
-
+    old_caption = query.message.caption
     # if user increases the quantity of products from the cart
     if data.order_id:
         update_order_record(data.order_id, data.user_id, from_cart=True)
@@ -51,12 +51,16 @@ async def add_in_order(query: CallbackQuery) -> None:
         # if user already add product before -> update quantity
         if check_order_exist(data.product_id, data.user_id):
             update_order_record(data.product_id, data.user_id)
+            quantity = get_product_quantity_from_cart(data.user_id, data.product_id)
+            caption = old_caption.replace(old_caption[(old_caption.find('руб.') + 4):], '\nСейчас в корзине: {} шт.'.format(quantity))
             await query.bot.answer_callback_query(query.id, text='Количество товаров увеличено', show_alert=True)
+            await query.bot.edit_message_caption(chat_id=query.message.chat.id, message_id=query.message.message_id, caption=caption, reply_markup=query.message.reply_markup)
 
         else:
             create_order_record(product_id=data.product_id, user_telegram_id=data.user_id)
+            quantity = get_product_quantity_from_cart(data.user_id, data.product_id)
             await query.bot.answer_callback_query(query.id, text='Товар успешно добавлен', show_alert=True)
-            await query.bot.edit_message_text(text='2222', message_id=query.message.message_id)
+            await query.bot.edit_message_caption(chat_id=query.message.chat.id, message_id=query.message.message_id, caption=query.message.caption + '\nСейчас в корзине: {} шт.'.format(quantity), reply_markup=query.message.reply_markup)
 
 
 
