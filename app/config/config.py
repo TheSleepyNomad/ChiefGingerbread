@@ -1,5 +1,5 @@
 from pathlib import Path
-from aiogram.types import InputFile
+
 
 # root dit
 BASE_DIR = Path(__file__).resolve().parent.parent
