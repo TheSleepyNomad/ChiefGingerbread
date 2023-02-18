@@ -25,6 +25,7 @@ class UserCart:
     quantity: int
     name: str
     price: float
+    img: str
 
 
 @dataclass

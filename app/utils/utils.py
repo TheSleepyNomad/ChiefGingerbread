@@ -11,7 +11,8 @@ def _convert_in_UserCart(user_cart: List[Row] | Row) -> List[UserCart]:
         cart.append(UserCart(id=item[0],
                              quantity=item[1],
                              name=item[2],
-                             price=item[3]))
+                             price=item[3],
+                             img=item[4]))
     return cart
 
 def _get_data_from_json(query: CallbackQuery) -> QueryData:

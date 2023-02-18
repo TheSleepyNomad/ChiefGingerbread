@@ -123,15 +123,23 @@ async def deleted_selected_item_from_order(query: CallbackQuery) -> None:
 
 
 async def payment_process_query(query: CallbackQuery) -> None:
-    items = [
-        LabeledPrice(label='товар№1', amount=100*500),
-        LabeledPrice(label='товар№2', amount=100*50),
-        LabeledPrice(label='товар№3', amount=100*1100),
-        LabeledPrice(label='товар№4', amount=100*5),
-        LabeledPrice(label='товар№5', amount=100*123),
-    ]
+    # get user cart and products
+    products = get_cart_by_user(query.message.chat.id)
+    prices = []
+    # fill prices list
+    for product in products:
+        prices.append(LabeledPrice(label=product.name, amount=int(product.price)*100))
+
     await query.bot.answer_callback_query(query.id)
-    await query.bot.send_invoice(chat_id=query.message.chat.id,title='Тайт оплаты',description='Описание',provider_token='1744374395:TEST:5b88879c3684482b9133',currency='RUB',prices=items,start_parameter='time-machine-example',payload='test')
+    await query.bot.delete_message(query.message.chat.id, query.message.message_id)
+    await query.bot.send_invoice(chat_id=query.message.chat.id,
+                                 title='Оплата покупки',
+                                 description='Описание',
+                                 provider_token='1744374395:TEST:5b88879c3684482b9133',
+                                 currency='RUB',
+                                 prices=prices,
+                                 start_parameter='time-machine-example',
+                                 payload='test')
 
 
 def register_callback_query_handlers(dp: Dispatcher) -> None:
