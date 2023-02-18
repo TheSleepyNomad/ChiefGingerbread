@@ -1,13 +1,10 @@
-from aiogram import Bot, Dispatcher, executor
-from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InputFile, CallbackQuery, LabeledPrice
-from app.config.config import START_LOGO
-from app.database.methods.get import get_all_products, get_count_all_products, get_cart_by_user, get_selected_cart_item, get_product_by_id, get_product_quantity_from_cart
-from json import loads as json_loads
+from aiogram import Dispatcher
+from aiogram.types import InlineKeyboardButton, InputFile, CallbackQuery, LabeledPrice
+from app.database.methods.get import get_cart_by_user, get_selected_cart_item, get_product_by_id, get_product_quantity_from_cart
 from app.database.methods.create import create_order_record, check_order_exist, update_order_record
 from app.database.methods.delete import delele_user_cart, delete_selected_product_from_cart
 from math import ceil
 from app.database.methods.update import reduce_order_record
-from app.database.methods.other import check_user_baket_exist
 from app.handlers.command_handler import send_welcome_msg
 from app.markup.markup import create_catalog_markup, create_cart_markup, create_selected_item_markup, create_product_card_markup, create_start_markup, create_invoice_markup
 from app.utils.utils import _get_data_from_json
@@ -85,7 +82,6 @@ async def add_in_order(query: CallbackQuery) -> None:
 
 
 async def show_cart(query: CallbackQuery) -> None:
-    print(query.data)
     await query.bot.answer_callback_query(query.id)
     await query.bot.delete_message(query.message.chat.id, query.message.message_id)
     await query.bot.send_message(query.from_user.id, text='7777', reply_markup=create_cart_markup(query))
@@ -149,7 +145,7 @@ async def payment_process_query(query: CallbackQuery) -> None:
                                  prices=prices,
                                  start_parameter='time-machine-example',
                                  payload='test',
-                                 reply_markup=create_invoice_markup())
+                                 reply_markup=create_invoice_markup(query))
 
 
 def register_callback_query_handlers(dp: Dispatcher) -> None:
