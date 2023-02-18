@@ -100,9 +100,18 @@ async def delete_cart(query: CallbackQuery) -> None:
 
 
 async def show_selected_item(query: CallbackQuery) -> None:
+    data = _get_data_from_json(query)
+    selected_item = get_selected_cart_item(query.message.chat.id, data.order_id)
     await query.bot.answer_callback_query(query.id)
     await query.bot.delete_message(query.message.chat.id, query.message.message_id)
-    await query.bot.send_message(query.from_user.id, text='карточка выбранного из корзины товара', reply_markup=create_selected_item_markup(query))
+    with open(selected_item[0].img, 'rb') as img:
+        await query.bot.send_photo(query.from_user.id, 
+                                   photo=InputFile(img), 
+                                   caption=MsgTemplate.product_card_msg.format(name=selected_item[0].name,
+                                                                               title=selected_item[0].name,
+                                                                               price=selected_item[0].price), 
+                                                                               reply_markup=create_selected_item_markup(query), 
+                                                                               parse_mode='HTML')
 
 async def reduce_from_order(query: CallbackQuery) -> None:
     data = _get_data_from_json(query)

@@ -125,8 +125,9 @@ def create_cart_markup(query: CallbackQuery) -> InlineKeyboardMarkup:
     
 
 def create_selected_item_markup(query: CallbackQuery) -> InlineKeyboardMarkup:
-    print(query.data)
+    print('выбранный пребмеи')
     data = _get_data_from_json(query)
+    print(data)
     selected_item = get_selected_cart_item(query.message.chat.id, data.order_id)
     markup = InlineKeyboardMarkup().add(InlineKeyboardButton('Убрать из корзины', callback_data="{\"act\":\"reduce\",\"userId\":" + str(query.message.chat.id)+ ",\"orderId\":" + str(selected_item[0].id) +"}"),
                                         InlineKeyboardButton('Удалить из корзины', callback_data="{\"act\":\"delItm\",\"userId\":" + str(query.message.chat.id)+ ",\"orderId\":" + str(selected_item[0].id) +"}"),
