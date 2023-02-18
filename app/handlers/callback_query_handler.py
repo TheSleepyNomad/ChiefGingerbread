@@ -9,7 +9,7 @@ from math import ceil
 from app.database.methods.update import reduce_order_record
 from app.database.methods.other import check_user_baket_exist
 from app.handlers.command_handler import send_welcome_msg
-from app.markup.markup import create_catalog_markup, create_cart_markup, create_selected_item_markup, create_product_card_markup, create_start_markup
+from app.markup.markup import create_catalog_markup, create_cart_markup, create_selected_item_markup, create_product_card_markup, create_start_markup, create_invoice_markup
 from app.utils.utils import _get_data_from_json
 from app.misc.data import MsgTemplate
 
@@ -139,7 +139,8 @@ async def payment_process_query(query: CallbackQuery) -> None:
                                  currency='RUB',
                                  prices=prices,
                                  start_parameter='time-machine-example',
-                                 payload='test')
+                                 payload='test',
+                                 reply_markup=markup)
 
 
 def register_callback_query_handlers(dp: Dispatcher) -> None:

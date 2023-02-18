@@ -142,3 +142,9 @@ def create_product_card_markup(query: CallbackQuery) -> InlineKeyboardMarkup:
         markup.add(InlineKeyboardButton('Посмотреть корзину', callback_data="{\"page\":\"cart\",\"act\":\"pagin\",\"PageNum\":\"1\",\"CountPage\":" + str(user_products_count) + "}"))
     markup.add(InlineKeyboardButton(f'Назад в каталог', callback_data="{\"page\":\"catalog\",\"act\":\"pagin\",\"PageNum\":" + str(data.page - 1)+ ",\"CountPage\":" + str(data.count_page)+"}"))
     return markup
+
+
+def create_invoice_markup() -> InlineKeyboardMarkup:
+    markup = InlineKeyboardMarkup().add(InlineKeyboardButton('Оплатить',pay=True)).add(InlineKeyboardButton('Вернуться в меню', callback_data='menu'))
+    return markup
+    
