@@ -140,7 +140,7 @@ async def payment_process_query(query: CallbackQuery) -> None:
                                  prices=prices,
                                  start_parameter='time-machine-example',
                                  payload='test',
-                                 reply_markup=markup)
+                                 reply_markup=create_invoice_markup())
 
 
 def register_callback_query_handlers(dp: Dispatcher) -> None:
